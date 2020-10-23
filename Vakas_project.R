@@ -1,24 +1,23 @@
 
 #QQ <- read.delim("clipboard") #I copied the table in Excel and
 #used this command to import the data
-
+library(stargazer) #to create charts for regression and summary data 
 #you can also simply load the RData file I saved
 load(file="Vakas_data.RData") 
 class(QQ) #good if data.frame
 class(QQ$State) #good if factor
 class(QQ$Year) #good if integer
-class(QQ$Eviction) #this one and the rest should be numeric. They all are. Good
+class(QQ$Eviction) #lines 10-15 should be numeric
 class(QQ$Crime)
 class(QQ$Unempl)
 class(QQ$Ch_Evict)
 class(QQ$Ch_Crime)
 class(QQ$Ch_Unempl)
 
-summary(QQ) #format the results in a pretty way and present them in the paper,
-# also dicuss what unemployment rate, eviction rate and crime rate means and where the date is from.
+summary(QQ) 
 
-#create a new variable - lagged eviction and unemployment
-#one would think maybe crime rate this year depends on last year's eviction and unemployment rates
+#lagged eviction and unemployment
+#one would assume that crime rates this year depends on last year's eviction and unemployment rates
 
 QQ$lag_Crime=NA
 QQ$lag_Unempl=NA
@@ -31,20 +30,21 @@ for (i in seq(2,nrow(QQ))) {
     QQ$lag_Evict[i]=QQ$Evict[i-1]
   }
 }
-#check if the new variable lags the values correctly.
-#I think it does.
+#test if the new variable lags the values correctly.
+
 
 #Also, we can adjust the year variable. Let's create a time variable
-QQ$Time=QQ$Year-1999 #it is better to use this to control for time
+QQ$Time=QQ$Year-1999 #control for time
 
 save(QQ,file="Vakas_data.RData") #Save data so don't need to go back to Excel anymore
 
-#possible regressions you can include in your discussion
+#regressions
 
 reg1=lm(Crime~Eviction+Unempl+State+Time,data=QQ)
 summary(reg1)
 library(lmtest)
 library(sandwich)
+bptest(reg1)
 reg1b=coeftest(reg1, vcov = vcovHC(reg1)) #use heteroskedasticity robust SE
 reg1b
 
@@ -61,6 +61,7 @@ reg3b=coeftest(reg3, vcov = vcovHC(reg3)) #use heteroskedasticity robust SE
 reg3b
 
 reg4=lm(Ch_Crime~Ch_Evict+Ch_Unempl,data=QQ)
+stargazer(reg4, type='html', out = "Eviction and Crime Rates/reg4.html")
 summary(reg4)
 reg4b=coeftest(reg4, vcov = vcovHC(reg4)) #use heteroskedasticity robust SE
 reg4b
